@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"github.com/astaxie/beego"
 	"novel/common"
 	"novel/common/helper"
 	"novel/models"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -49,30 +51,54 @@ func (c *UserController) PostLogin() {
 }
 
 func (view *UserController) GetRegister() {
+	flash := beego.ReadFromRequest(&view.Controller)
+
+	if notice, ok := flash.Data["notice"]; ok {
+		view.Data["Username"] = notice
+	}
+	if msg, ok := flash.Data["error"]; ok {
+		message := strings.Split(msg,":")
+		view.Data["ErrorField"] = message[0]
+		view.Data["ErrorMessage"] = message[1]
+	}
+
 	view.Layout = "layouts/app.tpl"
 	view.TplName = "auth/register.tpl"
 }
 
 func (c *UserController) PostRegister() {
+	flash := beego.NewFlash()
+
 	username := c.GetString("reg_username")
 	password := c.GetString("reg_password")
 	retPassword := c.GetString("password_confirmation")
 
 	if !helper.Isset(username) {
-		c.Error("用户名不能为空！")
+		flash.Error("%s:用户名不能为空！", "username")
+		flash.Store(&c.Controller)
+		c.Redirect("/user/register",302)
 		return
 	}
 	if !helper.Isset(password) {
-		c.Error("密码不能为空！")
+		flash.Notice(username)
+		flash.Error("%s:密码不能为空！", "password")
+		flash.Store(&c.Controller)
+		c.Redirect("/user/register",302)
 		return
 	}
 	if password != retPassword {
-		c.Error("密码与确认密码不匹配！")
+		flash.Notice(username)
+		flash.Error("%s:密码与确认密码不匹配！", "retPassword")
+		flash.Store(&c.Controller)
+		c.Redirect("/user/register",302)
 		return
 	}
 
 	if models.GetUserByUserName(username) != nil {
-		c.Error("用户已存在")
+		flash.Notice(username)
+		flash.Error("%s:用户已存在！", "username")
+		flash.Store(&c.Controller)
+		c.Redirect("/user/register",302)
 		return
 	}
 
@@ -85,9 +111,12 @@ func (c *UserController) PostRegister() {
 	user.RegisterDate = loginDate
 
 	if _, err := models.AddUser(&user); err == nil {
-		c.Success("注册成功")
+		c.Redirect("/user/login",302)
 	} else {
-		c.Error(err.Error())
+		flash.Notice(username)
+		flash.Error("%s:注册失败！", "register")
+		flash.Store(&c.Controller)
+		c.Redirect("/user/register",302)
 	}
 }
 
