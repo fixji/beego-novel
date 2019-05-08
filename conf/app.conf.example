@@ -1,0 +1,17 @@
+appname = novel
+httpport = 8080
+runmode = dev
+
+enablexsrf = true
+xsrfkey = VlrO2MqJK+joSUxXn+kHs2QN8dgnBQ8Gl+sWhSOHlDg=
+xsrfexpire = 3600
+
+APP_URL=http://localhost:8080
+
+REDIS_HOST=127.0.0.1:6379
+REDIS_PASSWORD=
+REDIS_DB=5
+
+DB_DSN = "root:123456@tcp(127.0.0.1:3306)/crawler?charset=utf8"
+SESSION_DSN = "127.0.0.1:6379,10,,3"
+
